@@ -24,9 +24,15 @@ function load_options() {
         	  drawThreshold: 12,
         	  maxVisible: 20,
         	},
+			font: {
+      		  size: 25,
+      		  face: "Tahoma",
+      		},
 		}, 
 		edges: {
-    	  color: { inherit: true },
+			color: {inherited: true},
+
+			//color: "#000000",
     	  width: 0.15,
     	  smooth: {
     	    type: "continuous",
@@ -36,9 +42,9 @@ function load_options() {
 		
 		physics: {
     	  forceAtlas2Based: {
-    	    gravitationalConstant: -35,
-    	    centralGravity: 0.005,
-    	    springLength: 230,
+    	    gravitationalConstant: -50,
+    	    centralGravity: 0.001,
+    	    springLength: 280,
     	    springConstant: 0.18,
     	  },
     	  maxVelocity: 146,
