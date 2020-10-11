@@ -10,17 +10,27 @@ class App extends React.Component {
 	constructor(props) {
 		super(props)
 
+		console.log(json_data)
+
 		// graph payload (with minimalist structure)
+		const nodes = json_data.nodes.map(x => {
+			return {id: x.self_subroutine_name}
+		})
+		const edges = json_data.edges.map(x => {
+			let map = {
+				source: x.self_subroutine_name,
+				target: x.called_subroutine_name
+			};
+			return map
+		})
+		console.log("nodes");
+		console.log(nodes);
+		console.log("edges");
+		console.log(edges);
+
 		const data = {
-		    nodes: [
-		      {id: 'Harry'},
-		      {id: 'Sally'},
-		      {id: 'Alice'}
-		    ],
-		    links: [
-		        {source: 'Harry', target: 'Sally'},
-		        {source: 'Harry', target: 'Alice'},
-		    ]
+			nodes: nodes,
+			links: edges
 		};
 		
 		// the graph configuration, you only need to pass down properties
@@ -102,135 +112,71 @@ const onNodePositionChange = function(nodeId, x, y) {
      //window.alert(`Node ${nodeId} moved to new position x= ${x} y= ${y}`);
 };
 
-//const make_config = function() {
-//	return {
-//	  "automaticRearrangeAfterDropNode": false,
-//	  "collapsible": false,
-//	  "directed": true,
-//	  "focusAnimationDuration": 0.75,
-//	  "focusZoom": 1,
-//	  "height": 1000,
-//	  "highlightDegree": 1,
-//	  "highlightOpacity": 0.2,
-//	  "linkHighlightBehavior": false,
-//	  "maxZoom": 8,
-//	  "minZoom": 0.1,
-//	  "nodeHighlightBehavior": true,
-//	  "panAndZoom": false,
-//	  "staticGraph": false,
-//	  "staticGraphWithDragAndDrop": false,
-//	  "width": 1000,
-//	  "d3": {
-//	    "alphaTarget": 0.05,
-//	    "gravity": -400,
-//	    "linkLength": 300,
-//	    "linkStrength": 1,
-//	    "disableLinkForce": false
-//	  },
-//	  "node": {
-//	    "color": "#d3d3d3",
-//	    "fontColor": "black",
-//	    "fontSize": 12,
-//	    "fontWeight": "normal",
-//	    "highlightColor": "red",
-//	    "highlightFontSize": 20,
-//	    "highlightFontWeight": "bold",
-//	    "highlightStrokeColor": "SAME",
-//	    "highlightStrokeWidth": 1.5,
-//	    "labelProperty": "name",
-//	    "mouseCursor": "pointer",
-//	    "opacity": 1,
-//	    "renderLabel": true,
-//	    "size": 450,
-//	    "strokeColor": "none",
-//	    "strokeWidth": 1.5,
-//	    //"svg": "",
-//	    "symbolType": "circle"
-//	  },
-//	  "link": {
-//	    "color": "#d3d3d3",
-//	    "fontColor": "red",
-//	    "fontSize": 10,
-//	    "fontWeight": "normal",
-//	    "highlightColor": "blue",
-//	    "highlightFontSize": 8,
-//	    "highlightFontWeight": "bold",
-//	    "mouseCursor": "pointer",
-//	    "opacity": 1,
-//	    "renderLabel": false,
-//	    "semanticStrokeWidth": false,
-//	    "strokeWidth": 2,
-//	    "markerHeight": 6,
-//	    "markerWidth": 6
-//	  }
-//	}
-//
-//}
-
 const make_config = function() {
 	return {
 	  "automaticRearrangeAfterDropNode": false,
 	  "collapsible": false,
-	  "directed": false,
+	  "directed": true,
 	  "focusAnimationDuration": 0.75,
 	  "focusZoom": 1,
-	  "height": 400,
+	  "height": 1000,
 	  "highlightDegree": 1,
-	  "highlightOpacity": 1,
+	  "highlightOpacity": 0.2,
 	  "linkHighlightBehavior": false,
 	  "maxZoom": 8,
 	  "minZoom": 0.1,
-	  "nodeHighlightBehavior": false,
+	  "nodeHighlightBehavior": true,
 	  "panAndZoom": false,
 	  "staticGraph": false,
 	  "staticGraphWithDragAndDrop": false,
-	  "width": 800,
+	  "width": 1600,
 	  "d3": {
 	    "alphaTarget": 0.05,
-	    "gravity": -100,
-	    "linkLength": 100,
-	    "linkStrength": 1,
+	    "gravity": -800,
+	    "linkLength": 400,
+	    "linkStrength": .1,
 	    "disableLinkForce": false
 	  },
 	  "node": {
 	    "color": "#d3d3d3",
 	    "fontColor": "black",
-	    "fontSize": 8,
+	    "fontSize": 20,
 	    "fontWeight": "normal",
-	    "highlightColor": "SAME",
-	    "highlightFontSize": 8,
-	    "highlightFontWeight": "normal",
+	    "highlightColor": "red",
+	    "highlightFontSize": 30,
+	    "highlightFontWeight": "bold",
 	    "highlightStrokeColor": "SAME",
-	    "highlightStrokeWidth": "SAME",
-	    "labelProperty": "id",
+	    "highlightStrokeWidth": 1.5,
+	    "labelProperty": "name",
 	    "mouseCursor": "pointer",
 	    "opacity": 1,
 	    "renderLabel": true,
-	    "size": 200,
+	    "size": 450,
 	    "strokeColor": "none",
 	    "strokeWidth": 1.5,
-	    "svg": "",
+	    //"svg": "",
 	    "symbolType": "circle"
 	  },
 	  "link": {
 	    "color": "#d3d3d3",
-	    "fontColor": "black",
-	    "fontSize": 8,
+	    "fontColor": "red",
+	    "fontSize": 10,
 	    "fontWeight": "normal",
-	    "highlightColor": "SAME",
+	    "highlightColor": "blue",
 	    "highlightFontSize": 8,
-	    "highlightFontWeight": "normal",
-	    "labelProperty": "label",
+	    "highlightFontWeight": "bold",
 	    "mouseCursor": "pointer",
 	    "opacity": 1,
 	    "renderLabel": false,
 	    "semanticStrokeWidth": false,
-	    "strokeWidth": 1.5,
+	    "strokeWidth": 2,
 	    "markerHeight": 6,
-	    "markerWidth": 6
+	    "markerWidth": 6,
+		//"type": "CURVE_SMOOTH"
 	  }
 	}
 
 }
+
 
 export default App;
