@@ -1,22 +1,75 @@
 import json_data from './streams.json';
-import React from 'react';
+import React, {useCallback} from 'react';
+
 import ReactDOM from "react-dom";
 
+import {useDropzone} from 'react-dropzone'
+import Dropzone from 'react-dropzone'
 import './App.css';
 import { Graph } from 'react-d3-graph';
 
 class App extends React.Component {
+	constructor(props) {
+		super(props)
+		this.state = {initialized_graph: false, uploaded_json: undefined};
+	}
 
+	// When the user chooses json data this callback fires and we set the json that we 
+	// will pass to the graph
+	onUpload(uploadedAndParsedJson) {
+		console.log("json data has been uploaded");
+		this.setState({uploaded_json: uploadedAndParsedJson, initialized_graph: true})
+	}
+	
+	render() {
+		if (this.state.initialized_graph == false) {
+			return <JsonUpload onUpload={this.onUpload.bind(this)}/>
+		} else {
+			return <CustomGraph graph_json={json_data}/>
+		}
+	}
+}
+
+function JsonUpload(props) {
+
+	const onDrop = useCallback(acceptedFiles => {
+		console.log("ondrop")
+		console.log(acceptedFiles[0])
+		let reader = new FileReader();
+		console.log(reader)
+		let text = reader.readAsText(acceptedFiles[0])
+
+		reader.onload = function() {
+			props.onUpload(JSON.parse(reader.result));
+			console.log(text)
+  		};
+
+  	}, [])
+
+  	const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
+ 
+  	return (
+  	  <div {...getRootProps()}>
+  	    <input {...getInputProps()} />
+  	    {
+  	      isDragActive ?
+  	        <p>Drop the files here ...</p> :
+  	        <p>Drag 'n' drop some files here, or click to select files</p>
+  	    }
+  	  </div>
+  	)
+}
+
+
+class CustomGraph extends React.Component {
 	constructor(props) {
 		super(props)
 
-		console.log(json_data)
-
 		// graph payload (with minimalist structure)
-		const nodes = json_data.nodes.map(x => {
+		const nodes = props.graph_json.nodes.map(x => {
 			return {id: x.self_subroutine_name}
 		})
-		const edges = json_data.edges.map(x => {
+		const edges = props.graph_json.edges.map(x => {
 			let map = {
 				source: x.self_subroutine_name,
 				target: x.called_subroutine_name
@@ -64,6 +117,8 @@ class App extends React.Component {
 		console.log(graph)
 		return graph
 	}
+
+
 }
 
 // Callback to handle click on the graph.
@@ -132,7 +187,7 @@ const make_config = function() {
 	  "width": 1600,
 	  "d3": {
 	    "alphaTarget": 0.05,
-	    "gravity": -800,
+	    "gravity": -2000,
 	    "linkLength": 400,
 	    "linkStrength": .1,
 	    "disableLinkForce": false
