@@ -36,3 +36,15 @@
     transform: rotate(360deg);
   }
 }
+
+#graph-id-graph-wrapper {
+	margin: auto;
+	width: 49%;
+	border: 3px solid green;
+	padding: 10px;
+}
+#graph-id-graph-container-zoomable{
+	margin: auto;
+	border: 3px solid green;
+	padding: 10px;
+}

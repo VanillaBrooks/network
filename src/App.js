@@ -3,119 +3,234 @@ import React from 'react';
 import ReactDOM from "react-dom";
 
 import './App.css';
-import Graph from "react-graph-vis";
+import { Graph } from 'react-d3-graph';
 
-//import "./styles.css";
-//// need to import the vis network css in order to show tooltip
-//import "./network.css";
-//
+class App extends React.Component {
 
-function load_options() {
-	let options = {
-		nodes: {
-			shape: "dot",
-			scaling: {
-				min:10,
-				max:30
-			},
-			label: {
-        	  min: 8,
-        	  max: 30,
-        	  drawThreshold: 12,
-        	  maxVisible: 20,
-        	},
-			font: {
-      		  size: 25,
-      		  face: "Tahoma",
-      		},
-		}, 
-		edges: {
-			//color: {inherit: "from"},
+	constructor(props) {
+		super(props)
 
-			color: "#000000",
-    	  width: 0.15,
-    	  smooth: {
-    	    type: "continuous",
-    	  },
-    	},
-		height: "1000px",
+		// graph payload (with minimalist structure)
+		const data = {
+		    nodes: [
+		      {id: 'Harry'},
+		      {id: 'Sally'},
+		      {id: 'Alice'}
+		    ],
+		    links: [
+		        {source: 'Harry', target: 'Sally'},
+		        {source: 'Harry', target: 'Alice'},
+		    ]
+		};
 		
-		physics: {
-    	  forceAtlas2Based: {
-    	    gravitationalConstant: -50,
-    	    centralGravity: 0.001,
-    	    springLength: 280,
-    	    springConstant: 0.18,
-    	  },
-    	  maxVelocity: 146,
-    	  solver: "forceAtlas2Based",
-    	  timestep: 0.35,
-    	  stabilization: { iterations: 150 },
-    	},
-  	};
-	return options
+		// the graph configuration, you only need to pass down properties
+		// that you want to override, otherwise default ones will be used
+		const myConfig = make_config();
+		this.state = {data: data, config: myConfig};
+
+	}
+
+	onZoomChange(prevZoom, newZoom) {
+		this.setState({currentZoom: newZoom});
+	}
+	
+	render() {
+		const graph = <Graph
+		     id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
+		     data={this.state.data}
+		     config={this.state.config}
+			 onZoomChange={this.onZoomChange}
+		     //onClickGraph={onClickGraph}
+		     //onClickNode={onClickNode}
+		     //onDoubleClickNode={onDoubleClickNode}
+		     //onRightClickNode={onRightClickNode}
+		     //onClickLink={onClickLink}
+		     //onRightClickLink={onRightClickLink}
+		     //onMouseOverNode={onMouseOverNode}
+		     //onMouseOutNode={onMouseOutNode}
+		     //onMouseOverLink={onMouseOverLink}
+		     //onMouseOutLink={onMouseOutLink}
+			/>
+		console.log(graph)
+		return graph
+	}
 }
 
-function App() {
+// Callback to handle click on the graph.
+// @param {Object} event click dom event
+const onClickGraph = function(event) {
+     //window.alert('Clicked the graph background');
+};
 
-//	var request = new XMLHttpRequest();
-//	request.open('GET', '/streams.json', false);  
-//	request.send(null);
+const onClickNode = function(nodeId) {
+     //window.alert('Clicked node ${nodeId}');
+};
+
+const onDoubleClickNode = function(nodeId) {
+     //window.alert('Double clicked node ${nodeId}');
+};
+
+const onRightClickNode = function(event, nodeId) {
+     //window.alert('Right clicked node ${nodeId}');
+};
+
+const onMouseOverNode = function(nodeId) {
+     //window.alert(`Mouse over node ${nodeId}`);
+};
+
+const onMouseOutNode = function(nodeId) {
+     //window.alert(`Mouse out node ${nodeId}`);
+};
+
+const onClickLink = function(source, target) {
+     //window.alert(`Clicked link between ${source} and ${target}`);
+};
+
+const onRightClickLink = function(event, source, target) {
+     //window.alert('Right clicked link between ${source} and ${target}');
+};
+
+const onMouseOverLink = function(source, target) {
+     //window.alert(`Mouse over in link between ${source} and ${target}`);
+};
+
+const onMouseOutLink = function(source, target) {
+     //window.alert(`Mouse out link between ${source} and ${target}`);
+};
+
+const onNodePositionChange = function(nodeId, x, y) {
+     //window.alert(`Node ${nodeId} moved to new position x= ${x} y= ${y}`);
+};
+
+//const make_config = function() {
+//	return {
+//	  "automaticRearrangeAfterDropNode": false,
+//	  "collapsible": false,
+//	  "directed": true,
+//	  "focusAnimationDuration": 0.75,
+//	  "focusZoom": 1,
+//	  "height": 1000,
+//	  "highlightDegree": 1,
+//	  "highlightOpacity": 0.2,
+//	  "linkHighlightBehavior": false,
+//	  "maxZoom": 8,
+//	  "minZoom": 0.1,
+//	  "nodeHighlightBehavior": true,
+//	  "panAndZoom": false,
+//	  "staticGraph": false,
+//	  "staticGraphWithDragAndDrop": false,
+//	  "width": 1000,
+//	  "d3": {
+//	    "alphaTarget": 0.05,
+//	    "gravity": -400,
+//	    "linkLength": 300,
+//	    "linkStrength": 1,
+//	    "disableLinkForce": false
+//	  },
+//	  "node": {
+//	    "color": "#d3d3d3",
+//	    "fontColor": "black",
+//	    "fontSize": 12,
+//	    "fontWeight": "normal",
+//	    "highlightColor": "red",
+//	    "highlightFontSize": 20,
+//	    "highlightFontWeight": "bold",
+//	    "highlightStrokeColor": "SAME",
+//	    "highlightStrokeWidth": 1.5,
+//	    "labelProperty": "name",
+//	    "mouseCursor": "pointer",
+//	    "opacity": 1,
+//	    "renderLabel": true,
+//	    "size": 450,
+//	    "strokeColor": "none",
+//	    "strokeWidth": 1.5,
+//	    //"svg": "",
+//	    "symbolType": "circle"
+//	  },
+//	  "link": {
+//	    "color": "#d3d3d3",
+//	    "fontColor": "red",
+//	    "fontSize": 10,
+//	    "fontWeight": "normal",
+//	    "highlightColor": "blue",
+//	    "highlightFontSize": 8,
+//	    "highlightFontWeight": "bold",
+//	    "mouseCursor": "pointer",
+//	    "opacity": 1,
+//	    "renderLabel": false,
+//	    "semanticStrokeWidth": false,
+//	    "strokeWidth": 2,
+//	    "markerHeight": 6,
+//	    "markerWidth": 6
+//	  }
+//	}
 //
-//	console.log(request.responseText);
-//	
-//	let json_data = JSON.parse(request.responseText);
+//}
 
-	console.log(json_data);
-	
-	let label_map = new Map();
-	let counter = 0;
-
-	const nodes = json_data.nodes.map(x => {
-		counter += 1;
-		label_map.set(x.self_subroutine_name, counter);
-		return {id: counter, label: x.self_subroutine_name, title: x.self_subroutine_name, group: x.parent_file_name}
-	})
-
-	const edges = json_data.edges.map(edge => {
-		console.log(edge.base_file    +" id:"  +label_map.get(edge.base_file))
-		console.log(edge.called_file  + " id:" + label_map.get(edge.called_file))
-		return {
-			from: label_map.get(edge.self_subroutine_name),
-			to: label_map.get(edge.called_subroutine_name),
-			value: edge.occurances
-		}
-	});
-
-	const graph = {
-		nodes: nodes,
-		edges: edges
-	};
-
-
-	console.log(nodes)
-	console.log(edges)
-	let options = load_options();
-
-	const events = {
-	  select: function(event) {
-	    var { nodes, edges } = event;
-	    console.log("Selected nodes:");
-		  console.log(nodes.entries())//.forEach(x => console.log(x));
-	    console.log(nodes);
-	    console.log("Selected edges:");
-	    console.log(edges);
+const make_config = function() {
+	return {
+	  "automaticRearrangeAfterDropNode": false,
+	  "collapsible": false,
+	  "directed": false,
+	  "focusAnimationDuration": 0.75,
+	  "focusZoom": 1,
+	  "height": 400,
+	  "highlightDegree": 1,
+	  "highlightOpacity": 1,
+	  "linkHighlightBehavior": false,
+	  "maxZoom": 8,
+	  "minZoom": 0.1,
+	  "nodeHighlightBehavior": false,
+	  "panAndZoom": false,
+	  "staticGraph": false,
+	  "staticGraphWithDragAndDrop": false,
+	  "width": 800,
+	  "d3": {
+	    "alphaTarget": 0.05,
+	    "gravity": -100,
+	    "linkLength": 100,
+	    "linkStrength": 1,
+	    "disableLinkForce": false
+	  },
+	  "node": {
+	    "color": "#d3d3d3",
+	    "fontColor": "black",
+	    "fontSize": 8,
+	    "fontWeight": "normal",
+	    "highlightColor": "SAME",
+	    "highlightFontSize": 8,
+	    "highlightFontWeight": "normal",
+	    "highlightStrokeColor": "SAME",
+	    "highlightStrokeWidth": "SAME",
+	    "labelProperty": "id",
+	    "mouseCursor": "pointer",
+	    "opacity": 1,
+	    "renderLabel": true,
+	    "size": 200,
+	    "strokeColor": "none",
+	    "strokeWidth": 1.5,
+	    "svg": "",
+	    "symbolType": "circle"
+	  },
+	  "link": {
+	    "color": "#d3d3d3",
+	    "fontColor": "black",
+	    "fontSize": 8,
+	    "fontWeight": "normal",
+	    "highlightColor": "SAME",
+	    "highlightFontSize": 8,
+	    "highlightFontWeight": "normal",
+	    "labelProperty": "label",
+	    "mouseCursor": "pointer",
+	    "opacity": 1,
+	    "renderLabel": false,
+	    "semanticStrokeWidth": false,
+	    "strokeWidth": 1.5,
+	    "markerHeight": 6,
+	    "markerWidth": 6
 	  }
-	};
+	}
 
-  return (
-    <Graph
-      graph={graph}
-      options={options}
-      events={events}
-      getNetwork={network => {}}
-    />
-  );
 }
 
 export default App;
