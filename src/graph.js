@@ -17,7 +17,10 @@ class CustomGraph extends React.Component {
 			data: data, 
 			config: myConfig,
 			isColorNodesSame: true,
-			isColorNodesFile: false
+			isColorNodesFile: false,
+			isNodeSubroutine: true,
+			isNodeFile: false,
+			isNodeSubroutineAndFile: false,
 		};
 	}
 
@@ -26,9 +29,23 @@ class CustomGraph extends React.Component {
 		this.setState({currentZoom: newZoom});
 	}
 
+	dontAllowColorOptions() {
+		if (this.state.isNodeSubroutineAndFile || this.state.isNodeFile) {
+			console.log("preventing options")
+			return true
+		}
+		else {
+			return false
+		}
+
+	}
+
 	// redraw all the nodes with the same colors
 	colorNodesSame() {
 		console.log("nodes same")
+		if (this.dontAllowColorOptions()) {
+			return 
+		}
 		this.setState({
 			isColorNodesSame: true, 
 			isColorNodesFile: false,
@@ -36,6 +53,63 @@ class CustomGraph extends React.Component {
 		})
 	}
 
+	// redraw all the nodes with their colors corresponding to the colors of the parent file
+	colorNodesFile() {
+		console.log("nodes file")
+		if (this.dontAllowColorOptions()) {
+			return 
+		}
+		this.setState({
+			isColorNodesSame: false, 
+			isColorNodesFile: true, 
+			data:color_nodes_by_parent_file(this.props.graph_json)
+		});
+	}
+
+
+	// Nodes Setters
+	nodesBySubroutine() {
+		console.log("nodes by subroutine")
+		this.setState({
+			isNodeSubroutine: true,
+			isNodeFile: false,
+			isNodeSubroutineAndFile: false,
+			data: this.generateSubroutineGraph(this.props.graph_json)
+		})
+	}
+
+	nodesByFile() {
+		console.log("nodes by file")
+		this.setState({
+			isNodeSubroutine: false,
+			isNodeFile: true,
+			isNodeSubroutineAndFile: false,
+			data: nodesByFileGraph(this.props.graph_json),
+		})
+	}
+
+	nodesByFileAndSubroutine() {
+		console.log("nodes by subroutine and file")
+		this.setState({
+			isNodeSubroutine: false,
+			isNodeFile: false,
+			isNodeSubroutineAndFile: true,
+			data: nodesByFileAndSubroutineGraph(this.props.graph_json),
+		})
+	}
+
+	generateSubroutineGraph() {
+		if (this.state.isColorNodesSame) {
+			return no_color_graph(this.props.json)
+		} else if (this.state.isColorNodesFile){
+			return color_nodes_by_parent_file(this.props.graph_json)
+		}
+		else {
+			window.alert("generateSubroutineGraph: Neither value true")
+		}
+	}
+	
+	// colors stuff
 	colorNodesSameClass() {
 		return this.state.isColorNodesSame ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
 	}
@@ -43,14 +117,15 @@ class CustomGraph extends React.Component {
 		return this.state.isColorNodesFile ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
 	}
 
-	// redraw all the nodes with their colors corresponding to the colors of the parent file
-	colorNodesFile() {
-		console.log("nodes file")
-		this.setState({
-			isColorNodesSame: false, 
-			isColorNodesFile: true, 
-			data:color_nodes_by_parent_file(this.props.graph_json)
-		});
+	// nodes stuff
+	nodesBySubroutineClass() {
+		return this.state.isNodeSubroutine? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+	}
+	nodesByFileClass() {
+		return this.state.isNodeFile? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+	}
+	nodesByFileAndSubroutineClass() {
+		return this.state.isNodeSubroutineAndFile? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
 	}
 
 	render() {
@@ -79,23 +154,42 @@ class CustomGraph extends React.Component {
 					</div>
 					<div className="col-3 graph-settings">
 						<p className="mb-1">Settings</p>
+
 						<div className="row">
 							<p>Node Colors</p>
 						</div>
 
+						{
+
+							this.dontAllowColorOptions() ?
+								<div class="list-group">
+									<button type="button" class={this.colorNodesSameClass()} disabled onClick={()=> this.colorNodesSame()}>Same Color</button>
+									<button type="button" class={this.colorNodesFileClass()} disabled onClick={() => this.colorNodesFile()} >Color By File</button>
+								</div>
+								:
+								<div class="list-group">
+									<button type="button" class={this.colorNodesSameClass()} onClick={()=> this.colorNodesSame()}>Same Color</button>
+									<button type="button" class={this.colorNodesFileClass()} onClick={() => this.colorNodesFile()} >Color By File</button>
+								</div>
+
+
+						}
+
+						<div className="row">
+							<p>Node Options</p>
+						</div>
+
 						<div class="list-group">
-							<button type="button" class={this.colorNodesSameClass()} onClick={()=> this.colorNodesSame()}>Same Color</button>
-							<button type="button" class={this.colorNodesFileClass()} onClick={() => this.colorNodesFile()} >Color By File</button>
+							<button type="button" class={this.nodesBySubroutineClass()} onClick={()=> this.nodesBySubroutine()}>Nodes by Subroutines</button>
+							<button type="button" class={this.nodesByFileClass()} onClick={() => this.nodesByFile()} >Nodes by File</button>
+							<button type="button" class={this.nodesByFileAndSubroutineClass()} onClick={() => this.nodesByFileAndSubroutine()} >Include both subroutines and files</button>
 						</div>
 
 					</div>
 				</div>
 			</div>
-
 		)
 	}
-
-
 }
 
 // Callback to handle click on the graph.
@@ -264,6 +358,67 @@ function color_nodes_by_parent_file(json_data) {
 		nodes: nodes,
 		links: edges
 	}
+}
+
+function nodesByFileGraph(json_data) {
+	let caller_callee_map = new Map();
+	let subroutine_to_file_map = new Map();
+
+	let nodes = json_data.nodes.map(node => {
+		subroutine_to_file_map.set(node.self_subroutine_name, node.parent_file_name);
+
+		return {
+			id: node.parent_file_name
+		}
+	});
+
+	// first we make a pass through all the edges and tally up all the occurances
+	// of the files calling each other
+	json_data.edges.forEach(edge => {
+		let start_file = subroutine_to_file_map.get(edge.self_subroutine_name);
+		let end_file = subroutine_to_file_map.get(edge.called_subroutine_name);
+
+		console.log("start_file: " + start_file)
+		console.log("end_file: " + end_file)
+
+		if (caller_callee_map.has(start_file)) {
+			let current = caller_callee_map.get(start_file);
+			current.add(end_file);
+			caller_callee_map.set(start_file, current)
+		}
+		else {
+			let set = new Set();
+			set.add(end_file);
+			caller_callee_map.set(start_file, set);
+		}
+	})
+
+	console.log("caller map");
+	console.log(caller_callee_map);
+
+	console.log("edges")
+
+	let edges = []
+	for (const [source_file, target_list] of caller_callee_map.entries()) {
+		// map over the list of files each file calls
+		target_list.forEach((target) => {
+			edges.push( {
+				source: source_file,
+				target: target,
+			})
+		})
+	}
+
+	console.log(edges)
+
+	return {
+		nodes: nodes,
+		links: edges
+	}
+}
+
+function nodesByFileAndSubroutineGraph(json_data) {
+	return no_color_graph(json_data)
 }
 
 export default CustomGraph;
