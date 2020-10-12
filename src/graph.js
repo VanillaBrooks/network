@@ -8,7 +8,9 @@ class CustomGraph extends React.Component {
 	constructor(props) {
 		super(props)
 
-		const data = no_color_graph(props.graph_json);
+		//const data = no_color_graph(props.graph_json);
+		const data = nodesByFileGraph(props.graph_json);
+
 		
 		// the graph configuration, you only need to pass down properties
 		// that you want to override, otherwise default ones will be used
@@ -18,8 +20,8 @@ class CustomGraph extends React.Component {
 			config: myConfig,
 			isColorNodesSame: true,
 			isColorNodesFile: false,
-			isNodeSubroutine: true,
-			isNodeFile: false,
+			isNodeSubroutine: false,
+			isNodeFile: true,
 			isNodeSubroutineAndFile: false,
 		};
 	}
@@ -76,6 +78,8 @@ class CustomGraph extends React.Component {
 			isNodeSubroutineAndFile: false,
 			data: this.generateSubroutineGraph(this.props.graph_json)
 		})
+		this.refs.graph.restartSimulation();
+		this.refs.graph.resetNodesPositions();
 	}
 
 	nodesByFile() {
@@ -86,6 +90,12 @@ class CustomGraph extends React.Component {
 			isNodeSubroutineAndFile: false,
 			data: nodesByFileGraph(this.props.graph_json),
 		})
+		console.log("restarting simulation");
+		this.refs.graph.restartSimulation();
+		console.log("resteting node positions");
+		this.refs.graph.resetNodesPositions();
+		console.log("graph reference:")
+		console.log(this.refs.graph);
 	}
 
 	nodesByFileAndSubroutine() {
@@ -100,7 +110,7 @@ class CustomGraph extends React.Component {
 
 	generateSubroutineGraph() {
 		if (this.state.isColorNodesSame) {
-			return no_color_graph(this.props.json)
+			return no_color_graph(this.props.graph_json)
 		} else if (this.state.isColorNodesFile){
 			return color_nodes_by_parent_file(this.props.graph_json)
 		}
@@ -130,29 +140,30 @@ class CustomGraph extends React.Component {
 
 	render() {
 		let graph = <Graph
-		     id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
-		     data={this.state.data}
-		     config={this.state.config}
-			 onZoomChange={this.onZoomChange}
-		     //onClickGraph={onClickGraph}
-		     //onClickNode={onClickNode}
-		     //onDoubleClickNode={onDoubleClickNode}
-		     //onRightClickNode={onRightClickNode}
-		     //onClickLink={onClickLink}
-		     //onRightClickLink={onRightClickLink}
-		     //onMouseOverNode={onMouseOverNode}
-		     //onMouseOutNode={onMouseOutNode}
-		     //onMouseOverLink={onMouseOverLink}
-		     //onMouseOutLink={onMouseOutLink}
+		    id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
+			ref="graph"
+		    data={this.state.data}
+		    config={this.state.config}
+			onZoomChange={this.onZoomChange}
+		    onClickGraph={onClickGraph}
+		    onClickNode={onClickNode}
+		    onDoubleClickNode={onDoubleClickNode}
+		    onRightClickNode={onRightClickNode}
+		    onClickLink={onClickLink}
+		    onRightClickLink={onRightClickLink}
+		    onMouseOverNode={onMouseOverNode}
+		    onMouseOutNode={onMouseOutNode}
+		    onMouseOverLink={onMouseOverLink}
+		    onMouseOutLink={onMouseOutLink}
+			onNodePositionChange={onNodePositionChange}
 			/>
-		console.log(graph)
 		return (
 			<div className="container-fluid">
 				<div className="row">
 					<div className="col-9">
 						{graph}
 					</div>
-					<div className="col-3 graph-settings">
+					<div className="col-3 graph-settings shadow">
 						<p className="mb-1">Settings</p>
 
 						<div className="row">
@@ -160,7 +171,6 @@ class CustomGraph extends React.Component {
 						</div>
 
 						{
-
 							this.dontAllowColorOptions() ?
 								<div class="list-group">
 									<button type="button" class={this.colorNodesSameClass()} disabled onClick={()=> this.colorNodesSame()}>Same Color</button>
@@ -171,8 +181,6 @@ class CustomGraph extends React.Component {
 									<button type="button" class={this.colorNodesSameClass()} onClick={()=> this.colorNodesSame()}>Same Color</button>
 									<button type="button" class={this.colorNodesFileClass()} onClick={() => this.colorNodesFile()} >Color By File</button>
 								</div>
-
-
 						}
 
 						<div className="row">
@@ -195,6 +203,7 @@ class CustomGraph extends React.Component {
 // Callback to handle click on the graph.
 // @param {Object} event click dom event
 const onClickGraph = function(event) {
+	event.preventDefault();
      //window.alert('Clicked the graph background');
 };
 
@@ -207,6 +216,7 @@ const onDoubleClickNode = function(nodeId) {
 };
 
 const onRightClickNode = function(event, nodeId) {
+	event.preventDefault();
      //window.alert('Right clicked node ${nodeId}');
 };
 
@@ -223,6 +233,7 @@ const onClickLink = function(source, target) {
 };
 
 const onRightClickLink = function(event, source, target) {
+	event.preventDefault();
      //window.alert('Right clicked link between ${source} and ${target}');
 };
 
@@ -241,7 +252,7 @@ const onNodePositionChange = function(nodeId, x, y) {
 const make_config = function() {
 	return {
 	  "automaticRearrangeAfterDropNode": false,
-	  "collapsible": false,
+	  "collapsible": true,
 	  "directed": true,
 	  "focusAnimationDuration": 0.75,
 	  "focusZoom": 1,
@@ -253,8 +264,8 @@ const make_config = function() {
 	  "minZoom": 0.1,
 	  "nodeHighlightBehavior": true,
 	  "panAndZoom": false,
-	  "staticGraph": false,
-	  "staticGraphWithDragAndDrop": false,
+	  //"staticGraph": false,
+	  //"staticGraphWithDragAndDrop": false,
 	  "width": 1500,
 	  "d3": {
 	    "alphaTarget": 0.05,
@@ -280,7 +291,7 @@ const make_config = function() {
 	    "size": 450,
 	    "strokeColor": "none",
 	    "strokeWidth": 1.5,
-	    //"svg": "",
+	    "svg": "",
 	    "symbolType": "circle"
 	  },
 	  "link": {
