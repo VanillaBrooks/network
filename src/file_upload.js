@@ -22,18 +22,18 @@ function JsonUpload(props) {
 	// center in bootstrap so it is what it is
   	return (
 		<div className="container">
-			<div style={{"padding":"20% 0"}}/>
+			<div style={{"padding":"18% 0"}}/>
 			<div className="row justify-content-center">
 				<div className="col-5 align-self-center shadow shadow-lg rounded">
 					<div {...getRootProps(
 						{
 							style: {
-								"min-height":"100px",
-								"border-style":"dashed",
-								"border-radius":"3px",
-								"border-width":"1px"
+								"minHeight":"100px",
+								"borderStyle":"dashed",
+								"borderRadius":"3px",
+								"borderWidth":"1px"
 							},
-							class: "p-2 mt-3"
+							className: "p-2 mt-3"
 						}
 					)
 					}>

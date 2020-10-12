@@ -227,10 +227,12 @@ class CustomGraph extends React.Component {
 						{graph}
 					</div>
 					<div className="col-3 graph-settings shadow">
-						<h3 className="mb-1">Settings</h3>
+						<h3 className="mt-2">Settings</h3>
+						
+						<hr/>
 
 						<div className="row">
-							<p class="pl-3 mt-1">Node Colors</p>
+							<h5 class="pl-3 mt-1">Node Colors</h5>
 						</div>
 
 						{
@@ -247,7 +249,7 @@ class CustomGraph extends React.Component {
 						}
 
 						<div className="row">
-							<p class="pl-3 mt-3">Node Options</p>
+							<h5 class="pl-3 mt-3">Node Options</h5>
 						</div>
 
 						<div class="list-group">
