@@ -451,7 +451,77 @@ function nodesByFileGraph(json_data) {
 }
 
 function nodesByFileAndSubroutineGraph(json_data) {
-	return no_color_graph(json_data)
+	let caller_callee_map = new Map();
+	let subroutine_to_file_map = new Map();
+
+	let edges = []
+
+	// generate nodes for the files
+	let nodes_to_concat= json_data.nodes.map(node => {
+		subroutine_to_file_map.set(node.self_subroutine_name, node.parent_file_name);
+
+		return {
+			id: node.parent_file_name,
+			symbolType: "triangle"
+		}
+	});
+
+	// also generate nodes for the subroutines
+	let nodes = nodes_to_concat.concat(json_data.nodes.map(node => {
+		// make sure there is an edge between the file and and its subroutine
+		edges.push( {
+			source: node.parent_file_name,
+			target: node.self_subroutine_name,
+		})
+
+		return {
+			id: node.self_subroutine_name,
+			symbolType: "square"
+		}
+	}))
+
+
+	// first we make a pass through all the edges and tally up all the occurances
+	// of the files calling each other
+	json_data.edges.forEach(edge => {
+		let start_file = subroutine_to_file_map.get(edge.self_subroutine_name);
+		let end_file = subroutine_to_file_map.get(edge.called_subroutine_name);
+
+		if (caller_callee_map.has(start_file)) {
+			let current = caller_callee_map.get(start_file);
+			current.add(end_file);
+			caller_callee_map.set(start_file, current)
+		}
+		else {
+			let set = new Set();
+			set.add(end_file);
+			caller_callee_map.set(start_file, set);
+		}
+
+		// also add connections between subroutines
+		edges.push( {
+			source: edge.self_subroutine_name,
+			target: edge.called_subroutine_name,
+		})
+	})
+
+	for (const [source_file, target_list] of caller_callee_map.entries()) {
+		// map over the list of files each file calls
+		target_list.forEach((target) => {
+			edges.push( {
+				source: source_file,
+				target: target,
+			})
+		})
+	}
+
+	console.log("edges after adding file to file connections")
+	console.log(edges)
+
+	return {
+		nodes: nodes,
+		links: edges
+	}
 }
 
 export default CustomGraph;
