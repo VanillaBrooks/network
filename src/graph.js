@@ -23,6 +23,7 @@ class CustomGraph extends React.Component {
 			isNodeSubroutine: false,
 			isNodeFile: true,
 			isNodeSubroutineAndFile: false,
+			key: 1,
 		};
 	}
 
@@ -78,8 +79,7 @@ class CustomGraph extends React.Component {
 			isNodeSubroutineAndFile: false,
 			data: this.generateSubroutineGraph(this.props.graph_json)
 		})
-		this.refs.graph.restartSimulation();
-		this.refs.graph.resetNodesPositions();
+		this.restartSimulation()
 	}
 
 	nodesByFile() {
@@ -90,12 +90,7 @@ class CustomGraph extends React.Component {
 			isNodeSubroutineAndFile: false,
 			data: nodesByFileGraph(this.props.graph_json),
 		})
-		console.log("restarting simulation");
-		this.refs.graph.restartSimulation();
-		console.log("resteting node positions");
-		this.refs.graph.resetNodesPositions();
-		console.log("graph reference:")
-		console.log(this.refs.graph);
+		this.restartSimulation()
 	}
 
 	nodesByFileAndSubroutine() {
@@ -106,6 +101,7 @@ class CustomGraph extends React.Component {
 			isNodeSubroutineAndFile: true,
 			data: nodesByFileAndSubroutineGraph(this.props.graph_json),
 		})
+		this.restartSimulation()
 	}
 
 	generateSubroutineGraph() {
@@ -138,8 +134,13 @@ class CustomGraph extends React.Component {
 		return this.state.isNodeSubroutineAndFile? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
 	}
 
+	restartSimulation() {
+		this.setState({key: this.state.key + 1})
+	}
+
 	render() {
 		let graph = <Graph
+			key={this.state.key}
 		    id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
 			ref="graph"
 		    data={this.state.data}
@@ -157,6 +158,7 @@ class CustomGraph extends React.Component {
 		    onMouseOutLink={onMouseOutLink}
 			onNodePositionChange={onNodePositionChange}
 			/>
+
 		return (
 			<div className="container-fluid">
 				<div className="row">
@@ -192,6 +194,8 @@ class CustomGraph extends React.Component {
 							<button type="button" class={this.nodesByFileClass()} onClick={() => this.nodesByFile()} >Nodes by File</button>
 							<button type="button" class={this.nodesByFileAndSubroutineClass()} onClick={() => this.nodesByFileAndSubroutine()} >Include both subroutines and files</button>
 						</div>
+
+						<button type="button" class="btn btn-primary" onClick={() => this.restartSimulation()}>Restart Simulation</button>
 
 					</div>
 				</div>
@@ -252,7 +256,8 @@ const onNodePositionChange = function(nodeId, x, y) {
 const make_config = function() {
 	return {
 	  "automaticRearrangeAfterDropNode": false,
-	  "collapsible": true,
+	  "initialZoom": .3,
+	  "collapsible": false,
 	  "directed": true,
 	  "focusAnimationDuration": 0.75,
 	  "focusZoom": 1,
@@ -268,7 +273,7 @@ const make_config = function() {
 	  //"staticGraphWithDragAndDrop": false,
 	  "width": 1500,
 	  "d3": {
-	    "alphaTarget": 0.05,
+	    "alphaTarget": 0.01,
 	    "gravity": -2000,
 	    "linkLength": 400,
 	    "linkStrength": .1,
