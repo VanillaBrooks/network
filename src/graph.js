@@ -33,14 +33,34 @@ class CustomGraph extends React.Component {
 	}
 
 	dontAllowColorOptions() {
-		if (this.state.isNodeSubroutineAndFile || this.state.isNodeFile) {
+		if (this.state.isNodeFile) {
 			console.log("preventing options")
 			return true
 		}
 		else {
 			return false
 		}
-
+	}
+	
+	// makes a number associated with what option is selected for the type of graph
+	// information being displayed
+	//
+	// 1 - nodes are subroutines
+	// 2 - nodes are files
+	// 3 - nodes are both subroutines and files
+	graph_number() {
+		if (this.state.isNodeSubroutine) {
+			return 1
+		}
+		else if (this.state.isNodeFile) {
+			return 2
+		}
+		else if (this.state.isNodeSubroutineAndFile) {
+			return 3
+		}
+		else {
+			window.alert("unhandled graph type")
+		}
 	}
 
 	// redraw all the nodes with the same colors
@@ -52,7 +72,7 @@ class CustomGraph extends React.Component {
 		this.setState({
 			isColorNodesSame: true, 
 			isColorNodesFile: false,
-			data: no_color_graph(this.props.graph_json)
+			data:this.generateSubroutineGraph(true, this.graph_number())
 		})
 	}
 
@@ -65,10 +85,9 @@ class CustomGraph extends React.Component {
 		this.setState({
 			isColorNodesSame: false, 
 			isColorNodesFile: true, 
-			data:color_nodes_by_parent_file(this.props.graph_json)
+			data:this.generateSubroutineGraph(false, this.graph_number())
 		});
 	}
-
 
 	// Nodes Setters
 	nodesBySubroutine() {
@@ -77,8 +96,9 @@ class CustomGraph extends React.Component {
 			isNodeSubroutine: true,
 			isNodeFile: false,
 			isNodeSubroutineAndFile: false,
-			data: this.generateSubroutineGraph(this.props.graph_json)
-		})
+			data: this.generateSubroutineGraph(this.state.isColorNodesSame, 1)
+		});
+
 		this.restartSimulation()
 	}
 
@@ -88,7 +108,7 @@ class CustomGraph extends React.Component {
 			isNodeSubroutine: false,
 			isNodeFile: true,
 			isNodeSubroutineAndFile: false,
-			data: nodesByFileGraph(this.props.graph_json),
+			data: this.generateSubroutineGraph(this.state.isColorNodesSame, 2)
 		})
 		this.restartSimulation()
 	}
@@ -99,16 +119,40 @@ class CustomGraph extends React.Component {
 			isNodeSubroutine: false,
 			isNodeFile: false,
 			isNodeSubroutineAndFile: true,
-			data: nodesByFileAndSubroutineGraph(this.props.graph_json),
+			data: this.generateSubroutineGraph(this.state.isColorNodesSame, 3)
 		})
+
 		this.restartSimulation()
 	}
 
-	generateSubroutineGraph() {
-		if (this.state.isColorNodesSame) {
-			return no_color_graph(this.props.graph_json)
-		} else if (this.state.isColorNodesFile){
-			return color_nodes_by_parent_file(this.props.graph_json)
+	generateSubroutineGraph(color_nodes_same, render_option) {
+		console.log(this.state.isNodeSubroutine, this.state.isNodeFile, this.state.isNodeSubroutineAndFile);
+		if (color_nodes_same === true) {
+			if (render_option === 1) {
+				console.log("same color subroutine only")
+				return no_color_graph(this.props.graph_json)
+			}
+			else if (render_option === 2) {
+				console.log("same color file only")
+				return nodesByFileGraph(this.props.graph_json);
+			}
+			else if (render_option === 3) {
+				console.log("same color file and subroutine")
+				return nodesByFileAndSubroutineGraph(this.props.graph_json, false);
+			}
+		} else if (color_nodes_same === false) {
+			if (render_option === 1){ 
+				console.log("color files | subroutine only")
+				return color_nodes_by_parent_file(this.props.graph_json)
+			}
+			else if (render_option === 2) {
+				console.log("color files | file only")
+				return nodesByFileGraph(this.props.graph_json);
+			}
+			else if (render_option === 3) {
+				console.log("color files | file and subroutine")
+				return nodesByFileAndSubroutineGraph(this.props.graph_json, true);
+			}
 		}
 		else {
 			window.alert("generateSubroutineGraph: Neither value true")
@@ -411,9 +455,6 @@ function nodesByFileGraph(json_data) {
 		let start_file = subroutine_to_file_map.get(edge.self_subroutine_name);
 		let end_file = subroutine_to_file_map.get(edge.called_subroutine_name);
 
-		console.log("start_file: " + start_file)
-		console.log("end_file: " + end_file)
-
 		if (caller_callee_map.has(start_file)) {
 			let current = caller_callee_map.get(start_file);
 			current.add(end_file);
@@ -450,19 +491,39 @@ function nodesByFileGraph(json_data) {
 	}
 }
 
-function nodesByFileAndSubroutineGraph(json_data) {
-	let caller_callee_map = new Map();
-	let subroutine_to_file_map = new Map();
+// use_colors determines if we should use the default node color from the config (false) or 
+// make all subroutines from the same file the same color (true)
+function nodesByFileAndSubroutineGraph(json_data, use_colors) {
+	// optionally stores colors that each file is associated with
+	let file_to_color = new Map();
 
 	let edges = []
 
 	// generate nodes for the files
 	let nodes_to_concat= json_data.nodes.map(node => {
-		subroutine_to_file_map.set(node.self_subroutine_name, node.parent_file_name);
+		// first we make sure that every file has a color associated wtih it
+		let color;
+		if (file_to_color.has(node.parent_file_name)) {
+			color = file_to_color.get(node.parent_file_name);
+		}
+		else {
+			let new_color = randomColor();
+			file_to_color.set(node.parent_file_name, new_color)
+			color = new_color
+		}
 
-		return {
-			id: node.parent_file_name,
-			symbolType: "triangle"
+		if (use_colors) {
+			return {
+				id: node.parent_file_name,
+				symbolType: "triangle",
+				color: color
+			}
+		}
+		else {
+			return {
+				id: node.parent_file_name,
+				symbolType: "triangle",
+			}
 		}
 	});
 
@@ -474,9 +535,18 @@ function nodesByFileAndSubroutineGraph(json_data) {
 			target: node.self_subroutine_name,
 		})
 
-		return {
-			id: node.self_subroutine_name,
-			symbolType: "square"
+		if (use_colors) {
+			return {
+				id: node.self_subroutine_name,
+				symbolType: "circle",
+				color: file_to_color.get(node.parent_file_name)
+			}
+		}
+		else {
+			return {
+				id: node.self_subroutine_name,
+				symbolType: "circle"
+			}
 		}
 	}))
 
@@ -484,39 +554,12 @@ function nodesByFileAndSubroutineGraph(json_data) {
 	// first we make a pass through all the edges and tally up all the occurances
 	// of the files calling each other
 	json_data.edges.forEach(edge => {
-		let start_file = subroutine_to_file_map.get(edge.self_subroutine_name);
-		let end_file = subroutine_to_file_map.get(edge.called_subroutine_name);
-
-		if (caller_callee_map.has(start_file)) {
-			let current = caller_callee_map.get(start_file);
-			current.add(end_file);
-			caller_callee_map.set(start_file, current)
-		}
-		else {
-			let set = new Set();
-			set.add(end_file);
-			caller_callee_map.set(start_file, set);
-		}
-
 		// also add connections between subroutines
 		edges.push( {
 			source: edge.self_subroutine_name,
 			target: edge.called_subroutine_name,
 		})
 	})
-
-	for (const [source_file, target_list] of caller_callee_map.entries()) {
-		// map over the list of files each file calls
-		target_list.forEach((target) => {
-			edges.push( {
-				source: source_file,
-				target: target,
-			})
-		})
-	}
-
-	console.log("edges after adding file to file connections")
-	console.log(edges)
 
 	return {
 		nodes: nodes,
