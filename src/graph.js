@@ -227,10 +227,10 @@ class CustomGraph extends React.Component {
 						{graph}
 					</div>
 					<div className="col-3 graph-settings shadow">
-						<p className="mb-1">Settings</p>
+						<h3 className="mb-1">Settings</h3>
 
 						<div className="row">
-							<p>Node Colors</p>
+							<p class="pl-3 mt-1">Node Colors</p>
 						</div>
 
 						{
@@ -247,7 +247,7 @@ class CustomGraph extends React.Component {
 						}
 
 						<div className="row">
-							<p>Node Options</p>
+							<p class="pl-3 mt-3">Node Options</p>
 						</div>
 
 						<div class="list-group">
@@ -256,7 +256,7 @@ class CustomGraph extends React.Component {
 							<button type="button" class={this.nodesByFileAndSubroutineClass()} onClick={() => this.nodesByFileAndSubroutine()} >Include both subroutines and files</button>
 						</div>
 
-						<button type="button" class="btn btn-primary" onClick={() => this.restartSimulation()}>Restart Simulation</button>
+						<button type="button" class="btn btn-primary mt-3" onClick={() => this.restartSimulation()}>Restart Simulation</button>
 
 					</div>
 				</div>

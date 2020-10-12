@@ -33,7 +33,7 @@ function JsonUpload(props) {
 								"border-radius":"3px",
 								"border-width":"1px"
 							},
-							class: "p-2"
+							class: "p-2 mt-3"
 						}
 					)
 					}>
@@ -55,8 +55,8 @@ function JsonUpload(props) {
 
 					{/* OTHERWISE: we can load a default file graph*/}
 					<div className="row">
-						<div className="col align-self-center">
-							<button className="btn btn-primary" onClick={onClick}>Load Example Graph</button>
+						<div className="col-md offset-md-3 pl-4">
+							<button className="btn btn-primary mb-2" onClick={onClick}>Load Example Graph</button>
 						</div>
 					</div>
 
