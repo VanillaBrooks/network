@@ -117,21 +117,38 @@ class CustomGraph extends React.Component {
 	
 	// colors stuff
 	colorNodesSameClass() {
-		return this.state.isColorNodesSame ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+		return this.genericButtonGroupColoring(this.state.isColorNodesSame, !this.state.isNodeFile)
 	}
 	colorNodesFileClass() {
-		return this.state.isColorNodesFile ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+		return this.genericButtonGroupColoring(this.state.isColorNodesFile, !this.state.isNodeFile)
 	}
 
 	// nodes stuff
 	nodesBySubroutineClass() {
-		return this.state.isNodeSubroutine? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+		return this.genericButtonGroupColoring(this.state.isNodeSubroutine, true);
 	}
 	nodesByFileClass() {
-		return this.state.isNodeFile? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+		return this.genericButtonGroupColoring(this.state.isNodeFile, true);
 	}
 	nodesByFileAndSubroutineClass() {
-		return this.state.isNodeSubroutineAndFile? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+		return this.genericButtonGroupColoring(this.state.isNodeSubroutineAndFile, true);
+	}
+
+
+	// is active determines if this button should be active (its clicked)
+	// allowed_active determines if these buttons are even allowed to be active (for example,
+	// this node coloring options are not enabled if the nodes are files)
+	genericButtonGroupColoring(is_active, allowed_active) {
+		if (is_active === true) {
+			if (allowed_active === true) {
+				return "list-group-item list-group-item-action active"
+			} else {
+				return "list-group-item list-group-item-action"
+			}
+		} else if (is_active === false) {
+			return "list-group-item list-group-item-action"
+		}
+		console.log("WARNING: genericButtonGroupColoring did not return a class")
 	}
 
 	restartSimulation() {
