@@ -47,15 +47,15 @@ function JsonUpload(props) {
 
   	  				</div>
 
-					<div class="row p-2">
-						<div class="col">
+					<div className="row p-2">
+						<div className="col">
 							<p className="text-center">or:</p>
 						</div>
 					</div>
 
 					{/* OTHERWISE: we can load a default file graph*/}
-					<div class="row">
-						<div class="col align-self-center">
+					<div className="row">
+						<div className="col align-self-center">
 							<button className="btn btn-primary" onClick={onClick}>Load Example Graph</button>
 						</div>
 					</div>

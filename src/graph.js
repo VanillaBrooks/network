@@ -2,45 +2,59 @@ import React from 'react';
 
 import './App.css';
 import { Graph } from 'react-d3-graph';
+import randomColor from 'randomcolor';
 
 class CustomGraph extends React.Component {
 	constructor(props) {
 		super(props)
 
-		// graph payload (with minimalist structure)
-		const nodes = props.graph_json.nodes.map(x => {
-			return {id: x.self_subroutine_name}
-		})
-		const edges = props.graph_json.edges.map(x => {
-			let map = {
-				source: x.self_subroutine_name,
-				target: x.called_subroutine_name
-			};
-			return map
-		})
-		console.log("nodes");
-		console.log(nodes);
-		console.log("edges");
-		console.log(edges);
-
-		const data = {
-			nodes: nodes,
-			links: edges
-		};
+		const data = no_color_graph(props.graph_json);
 		
 		// the graph configuration, you only need to pass down properties
 		// that you want to override, otherwise default ones will be used
 		const myConfig = make_config();
-		this.state = {data: data, config: myConfig};
-
+		this.state = {
+			data: data, 
+			config: myConfig,
+			isColorNodesSame: true,
+			isColorNodesFile: false
+		};
 	}
 
 	onZoomChange(prevZoom, newZoom) {
+		console.log(newZoom)
 		this.setState({currentZoom: newZoom});
 	}
-	
+
+	// redraw all the nodes with the same colors
+	colorNodesSame() {
+		console.log("nodes same")
+		this.setState({
+			isColorNodesSame: true, 
+			isColorNodesFile: false,
+			data: no_color_graph(this.props.graph_json)
+		})
+	}
+
+	colorNodesSameClass() {
+		return this.state.isColorNodesSame ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+	}
+	colorNodesFileClass() {
+		return this.state.isColorNodesFile ? "list-group-item list-group-item-action active" : "list-group-item list-group-item-action"
+	}
+
+	// redraw all the nodes with their colors corresponding to the colors of the parent file
+	colorNodesFile() {
+		console.log("nodes file")
+		this.setState({
+			isColorNodesSame: false, 
+			isColorNodesFile: true, 
+			data:color_nodes_by_parent_file(this.props.graph_json)
+		});
+	}
+
 	render() {
-		const graph = <Graph
+		let graph = <Graph
 		     id='graph-id' // id is mandatory, if no id is defined rd3g will throw an error
 		     data={this.state.data}
 		     config={this.state.config}
@@ -57,7 +71,28 @@ class CustomGraph extends React.Component {
 		     //onMouseOutLink={onMouseOutLink}
 			/>
 		console.log(graph)
-		return graph
+		return (
+			<div className="container-fluid">
+				<div className="row">
+					<div className="col-9">
+						{graph}
+					</div>
+					<div className="col-3 graph-settings">
+						<p className="mb-1">Settings</p>
+						<div className="row">
+							<p>Node Colors</p>
+						</div>
+
+						<div class="list-group">
+							<button type="button" class={this.colorNodesSameClass()} onClick={()=> this.colorNodesSame()}>Same Color</button>
+							<button type="button" class={this.colorNodesFileClass()} onClick={() => this.colorNodesFile()} >Color By File</button>
+						</div>
+
+					</div>
+				</div>
+			</div>
+
+		)
 	}
 
 
@@ -126,7 +161,7 @@ const make_config = function() {
 	  "panAndZoom": false,
 	  "staticGraph": false,
 	  "staticGraphWithDragAndDrop": false,
-	  "width": 1600,
+	  "width": 1500,
 	  "d3": {
 	    "alphaTarget": 0.05,
 	    "gravity": -2000,
@@ -171,6 +206,63 @@ const make_config = function() {
 	    "markerWidth": 6,
 		//"type": "CURVE_SMOOTH"
 	  }
+	}
+}
+
+// given some json generate a blank graph with each node using the default colors of the config
+function no_color_graph(json_data) {
+	// graph payload (with minimalist structure)
+	const nodes = json_data.nodes.map(x => {
+		return {id: x.self_subroutine_name}
+	})
+	const data = {
+		nodes: nodes,
+		links: generic_edges(json_data) 
+	};
+	return data
+}
+
+// common function to generate the links between nodes
+function generic_edges(json_data) {
+	const edges = json_data.edges.map(x => {
+		let map = {
+			source: x.self_subroutine_name,
+			target: x.called_subroutine_name
+		};
+		return map
+	})
+	return edges
+}
+
+
+// make the color of each node dependent on the file that it came from
+function color_nodes_by_parent_file(json_data) {
+	let file_to_color = new Map();
+
+	console.log("nodes")
+	console.log(json_data.nodes)
+	const nodes = json_data.nodes.map(node => {
+		let color;
+		if (file_to_color.has(node.parent_file_name)) {
+			color = file_to_color.get(node.parent_file_name);
+		}
+		else {
+			let new_color = randomColor();
+			file_to_color.set(node.parent_file_name, new_color)
+			color = new_color
+		}
+
+		return {
+			id: node.self_subroutine_name,
+			color: color
+		}
+	})
+
+	const edges = generic_edges(json_data);
+
+	return {
+		nodes: nodes,
+		links: edges
 	}
 }
 
