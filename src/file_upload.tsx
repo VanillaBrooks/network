@@ -2,19 +2,22 @@ import {useDropzone} from 'react-dropzone'
 import json_data from './streams.json';
 import React, {useCallback} from 'react';
 
-function JsonUpload(props) {
+
+function JsonUpload(props: any) {
 	const onDrop = useCallback(acceptedFiles => {
 		let reader = new FileReader();
 		reader.readAsText(acceptedFiles[0])
 
+
 		reader.onload = function() {
-			props.onUpload(JSON.parse(reader.result));
+			let result: string = reader.result as string;
+			props.onUpload(JSON.parse(result));
   		};
   	}, [props])
 
   	const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
 
-	const onClick = function(event) {
+	const onClick = function(_event: any) {
 		props.onUpload(json_data)
 	}
  

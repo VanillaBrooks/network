@@ -3,9 +3,32 @@ import React from 'react';
 import './App.css';
 import { Graph } from 'react-d3-graph';
 import randomColor from 'randomcolor';
+import {GraphJson, Node, Edge} from './json';
+import MouseEvent from 'react-d3-graph';
 
-class CustomGraph extends React.Component {
-	constructor(props) {
+interface CustomGraphState {
+	data: any,
+	config: any,
+	isColorNodesSame: boolean,
+	isColorNodesFile: boolean,
+	isNodeSubroutine: boolean,
+	isNodeFile: boolean,
+	isNodeSubroutineAndFile: boolean,
+	key: number
+}
+
+interface CustomGraphProps{
+	graph_json: GraphJson;
+}
+
+
+interface GraphEdge {
+	source: string,
+	target: string
+}
+
+class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
+	constructor(props: CustomGraphProps) {
 		super(props)
 
 		//const data = no_color_graph(props.graph_json);
@@ -27,9 +50,9 @@ class CustomGraph extends React.Component {
 		};
 	}
 
-	onZoomChange(prevZoom, newZoom) {
+	onZoomChange(_prevZoom: number, newZoom: number) {
 		console.log(newZoom)
-		this.setState({currentZoom: newZoom});
+		//this.setState({currentZoom: newZoom});
 	}
 
 	dontAllowColorOptions() {
@@ -48,7 +71,7 @@ class CustomGraph extends React.Component {
 	// 1 - nodes are subroutines
 	// 2 - nodes are files
 	// 3 - nodes are both subroutines and files
-	graph_number() {
+	graph_number() : number{
 		if (this.state.isNodeSubroutine) {
 			return 1
 		}
@@ -59,8 +82,9 @@ class CustomGraph extends React.Component {
 			return 3
 		}
 		else {
-			window.alert("unhandled graph type")
+			window.alert("unhandled graph type. Everything will now fall apart")
 		}
+		return -1
 	}
 
 	// redraw all the nodes with the same colors
@@ -125,7 +149,7 @@ class CustomGraph extends React.Component {
 		this.restartSimulation()
 	}
 
-	generateSubroutineGraph(color_nodes_same, render_option) {
+	generateSubroutineGraph(color_nodes_same: boolean, render_option: number) {
 		console.log(this.state.isNodeSubroutine, this.state.isNodeFile, this.state.isNodeSubroutineAndFile);
 		if (color_nodes_same === true) {
 			if (render_option === 1) {
@@ -182,7 +206,7 @@ class CustomGraph extends React.Component {
 	// is active determines if this button should be active (its clicked)
 	// allowed_active determines if these buttons are even allowed to be active (for example,
 	// this node coloring options are not enabled if the nodes are files)
-	genericButtonGroupColoring(is_active, allowed_active) {
+	genericButtonGroupColoring(is_active: boolean, allowed_active: boolean) {
 		if (is_active === true) {
 			if (allowed_active === true) {
 				return "list-group-item list-group-item-action active"
@@ -206,7 +230,7 @@ class CustomGraph extends React.Component {
 			ref="graph"
 		    data={this.state.data}
 		    config={this.state.config}
-			onZoomChange={this.onZoomChange}
+			//onZoomChange={this.onZoomChange}
 		    onClickGraph={onClickGraph}
 		    onClickNode={onClickNode}
 		    onDoubleClickNode={onDoubleClickNode}
@@ -232,33 +256,33 @@ class CustomGraph extends React.Component {
 						<hr/>
 
 						<div className="row">
-							<h5 class="pl-3 mt-1">Node Colors</h5>
+							<h5 className="pl-3 mt-1">Node Colors</h5>
 						</div>
 
 						{
 							this.dontAllowColorOptions() ?
-								<div class="list-group">
-									<button type="button" class={this.colorNodesSameClass()} disabled onClick={()=> this.colorNodesSame()}>Same Color</button>
-									<button type="button" class={this.colorNodesFileClass()} disabled onClick={() => this.colorNodesFile()} >Color By File</button>
+								<div className="list-group">
+									<button type="button" className={this.colorNodesSameClass()} disabled onClick={()=> this.colorNodesSame()}>Same Color</button>
+									<button type="button" className={this.colorNodesFileClass()} disabled onClick={() => this.colorNodesFile()} >Color By File</button>
 								</div>
 								:
-								<div class="list-group">
-									<button type="button" class={this.colorNodesSameClass()} onClick={()=> this.colorNodesSame()}>Same Color</button>
-									<button type="button" class={this.colorNodesFileClass()} onClick={() => this.colorNodesFile()} >Color By File</button>
+								<div className="list-group">
+									<button type="button" className={this.colorNodesSameClass()} onClick={()=> this.colorNodesSame()}>Same Color</button>
+									<button type="button" className={this.colorNodesFileClass()} onClick={() => this.colorNodesFile()} >Color By File</button>
 								</div>
 						}
 
 						<div className="row">
-							<h5 class="pl-3 mt-3">Node Options</h5>
+							<h5 className="pl-3 mt-3">Node Options</h5>
 						</div>
 
-						<div class="list-group">
-							<button type="button" class={this.nodesBySubroutineClass()} onClick={()=> this.nodesBySubroutine()}>Nodes by Subroutines</button>
-							<button type="button" class={this.nodesByFileClass()} onClick={() => this.nodesByFile()} >Nodes by File</button>
-							<button type="button" class={this.nodesByFileAndSubroutineClass()} onClick={() => this.nodesByFileAndSubroutine()} >Include both subroutines and files</button>
+						<div className="list-group">
+							<button type="button" className={this.nodesBySubroutineClass()} onClick={()=> this.nodesBySubroutine()}>Nodes by Subroutines</button>
+							<button type="button" className={this.nodesByFileClass()} onClick={() => this.nodesByFile()} >Nodes by File</button>
+							<button type="button" className={this.nodesByFileAndSubroutineClass()} onClick={() => this.nodesByFileAndSubroutine()} >Include both subroutines and files</button>
 						</div>
 
-						<button type="button" class="btn btn-primary mt-3" onClick={() => this.restartSimulation()}>Restart Simulation</button>
+						<button type="button" className="btn btn-primary mt-3" onClick={() => this.restartSimulation()}>Restart Simulation</button>
 
 					</div>
 				</div>
@@ -269,50 +293,50 @@ class CustomGraph extends React.Component {
 
 // Callback to handle click on the graph.
 // @param {Object} event click dom event
-const onClickGraph = function(event) {
+const onClickGraph = function(event: any) {
 	event.preventDefault();
      //window.alert('Clicked the graph background');
 };
 
-const onClickNode = function(nodeId) {
+const onClickNode = function(nodeId: any) {
      //window.alert('Clicked node ${nodeId}');
 };
 
-const onDoubleClickNode = function(nodeId) {
+const onDoubleClickNode = function(nodeId: any) {
      //window.alert('Double clicked node ${nodeId}');
 };
 
-const onRightClickNode = function(event, nodeId) {
+const onRightClickNode = function(event: React.MouseEvent<Element, MouseEvent>, nodeId: string) {
 	event.preventDefault();
      //window.alert('Right clicked node ${nodeId}');
 };
 
-const onMouseOverNode = function(nodeId) {
+const onMouseOverNode = function(nodeId: string) {
      //window.alert(`Mouse over node ${nodeId}`);
 };
 
-const onMouseOutNode = function(nodeId) {
+const onMouseOutNode = function(nodeId: string) {
      //window.alert(`Mouse out node ${nodeId}`);
 };
 
-const onClickLink = function(source, target) {
+const onClickLink = function(source: any, target: any) {
      //window.alert(`Clicked link between ${source} and ${target}`);
 };
 
-const onRightClickLink = function(event, source, target) {
+const onRightClickLink = function(event: any, source: any, target: any) {
 	event.preventDefault();
      //window.alert('Right clicked link between ${source} and ${target}');
 };
 
-const onMouseOverLink = function(source, target) {
+const onMouseOverLink = function(source: any, target: any) {
      //window.alert(`Mouse over in link between ${source} and ${target}`);
 };
 
-const onMouseOutLink = function(source, target) {
+const onMouseOutLink = function(source: any, target: any) {
      //window.alert(`Mouse out link between ${source} and ${target}`);
 };
 
-const onNodePositionChange = function(nodeId, x, y) {
+const onNodePositionChange = function(nodeId: string, x: number, y:number) {
      //window.alert(`Node ${nodeId} moved to new position x= ${x} y= ${y}`);
 };
 
@@ -383,7 +407,7 @@ const make_config = function() {
 }
 
 // given some json generate a blank graph with each node using the default colors of the config
-function no_color_graph(json_data) {
+function no_color_graph(json_data: GraphJson) {
 	// graph payload (with minimalist structure)
 	const nodes = json_data.nodes.map(x => {
 		return {id: x.self_subroutine_name}
@@ -396,7 +420,7 @@ function no_color_graph(json_data) {
 }
 
 // common function to generate the links between nodes
-function generic_edges(json_data) {
+function generic_edges(json_data: GraphJson) {
 	const edges = json_data.edges.map(x => {
 		let map = {
 			source: x.self_subroutine_name,
@@ -409,7 +433,7 @@ function generic_edges(json_data) {
 
 
 // make the color of each node dependent on the file that it came from
-function color_nodes_by_parent_file(json_data) {
+function color_nodes_by_parent_file(json_data: GraphJson) {
 	let file_to_color = new Map();
 
 	console.log("nodes")
@@ -439,8 +463,8 @@ function color_nodes_by_parent_file(json_data) {
 	}
 }
 
-function nodesByFileGraph(json_data) {
-	let caller_callee_map = new Map();
+function nodesByFileGraph(json_data: GraphJson ) {
+	let caller_callee_map: Map<string, Set<string>>= new Map();
 	let subroutine_to_file_map = new Map();
 
 	let nodes = json_data.nodes.map(node => {
@@ -459,11 +483,13 @@ function nodesByFileGraph(json_data) {
 
 		if (caller_callee_map.has(start_file)) {
 			let current = caller_callee_map.get(start_file);
-			current.add(end_file);
-			caller_callee_map.set(start_file, current)
+			if (current !== undefined) {
+				current.add(end_file);
+				caller_callee_map.set(start_file, current)
+			}
 		}
 		else {
-			let set = new Set();
+			let set : Set<string>= new Set();
 			set.add(end_file);
 			caller_callee_map.set(start_file, set);
 		}
@@ -474,10 +500,11 @@ function nodesByFileGraph(json_data) {
 
 	console.log("edges")
 
-	let edges = []
+	let edges : Array<GraphEdge> = [];
+
 	for (const [source_file, target_list] of caller_callee_map.entries()) {
 		// map over the list of files each file calls
-		target_list.forEach((target) => {
+		target_list.forEach((target: string) => {
 			edges.push( {
 				source: source_file,
 				target: target,
@@ -495,11 +522,11 @@ function nodesByFileGraph(json_data) {
 
 // use_colors determines if we should use the default node color from the config (false) or 
 // make all subroutines from the same file the same color (true)
-function nodesByFileAndSubroutineGraph(json_data, use_colors) {
+function nodesByFileAndSubroutineGraph(json_data: GraphJson, use_colors: boolean) {
 	// optionally stores colors that each file is associated with
 	let file_to_color = new Map();
 
-	let edges = []
+	let edges : Array<GraphEdge>= []
 
 	// generate nodes for the files
 	let nodes_to_concat= json_data.nodes.map(node => {
