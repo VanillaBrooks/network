@@ -4,16 +4,12 @@ import './App.css';
 import { Graph } from 'react-d3-graph';
 import randomColor from 'randomcolor';
 import {GraphJson, Node, Edge} from './json';
-import MouseEvent from 'react-d3-graph';
 
 interface CustomGraphState {
 	data: any,
 	config: any,
-	isColorNodesSame: boolean,
-	isColorNodesFile: boolean,
-	isNodeSubroutine: boolean,
-	isNodeFile: boolean,
-	isNodeSubroutineAndFile: boolean,
+	nodeColor: NodeColor,
+	nodeType: NodeType,
 	key: number
 }
 
@@ -25,6 +21,30 @@ interface CustomGraphProps{
 interface GraphEdge {
 	source: string,
 	target: string
+}
+
+type NodeColor = SameColor | ColorByFile;
+
+interface SameColor {
+	type: "SameColor"
+}
+
+interface ColorByFile {
+	type: "ColorByFile",
+}
+
+type NodeType = NodesBySubroutines | NodesByFile | NodesBySubroutinesAndFile;
+
+interface NodesBySubroutines{
+	type: "NodesBySubroutines",
+}
+
+interface NodesByFile{
+	type: "NodesByFile",
+}
+
+interface NodesBySubroutinesAndFile{
+	type: "NodesBySubroutinesAndFile",
 }
 
 class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
@@ -41,11 +61,8 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		this.state = {
 			data: data, 
 			config: myConfig,
-			isColorNodesSame: true,
-			isColorNodesFile: false,
-			isNodeSubroutine: false,
-			isNodeFile: true,
-			isNodeSubroutineAndFile: false,
+			nodeColor: {type: "SameColor"},
+			nodeType: {type:"NodesByFile"},
 			key: 1,
 		};
 	}
@@ -56,7 +73,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 	}
 
 	dontAllowColorOptions() {
-		if (this.state.isNodeFile) {
+		if (this.state.nodeType.type === "NodesByFile") {
 			console.log("preventing options")
 			return true
 		}
@@ -65,38 +82,17 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		}
 	}
 	
-	// makes a number associated with what option is selected for the type of graph
-	// information being displayed
-	//
-	// 1 - nodes are subroutines
-	// 2 - nodes are files
-	// 3 - nodes are both subroutines and files
-	graph_number() : number{
-		if (this.state.isNodeSubroutine) {
-			return 1
-		}
-		else if (this.state.isNodeFile) {
-			return 2
-		}
-		else if (this.state.isNodeSubroutineAndFile) {
-			return 3
-		}
-		else {
-			window.alert("unhandled graph type. Everything will now fall apart")
-		}
-		return -1
-	}
-
 	// redraw all the nodes with the same colors
 	colorNodesSame() {
 		console.log("nodes same")
 		if (this.dontAllowColorOptions()) {
 			return 
 		}
+
+		let same : NodeColor= {type: "SameColor"};
 		this.setState({
-			isColorNodesSame: true, 
-			isColorNodesFile: false,
-			data:this.generateSubroutineGraph(true, this.graph_number())
+			nodeColor: same,
+			data:this.generateSubroutineGraph(same, undefined)
 		})
 	}
 
@@ -106,21 +102,21 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		if (this.dontAllowColorOptions()) {
 			return 
 		}
+		let byFile : NodeColor= {type: "ColorByFile"};
+
 		this.setState({
-			isColorNodesSame: false, 
-			isColorNodesFile: true, 
-			data:this.generateSubroutineGraph(false, this.graph_number())
+			nodeColor: byFile,
+			data:this.generateSubroutineGraph(byFile, undefined)
 		});
 	}
 
 	// Nodes Setters
 	nodesBySubroutine() {
 		console.log("nodes by subroutine")
+		let current : NodeType = {type:"NodesBySubroutines"};
 		this.setState({
-			isNodeSubroutine: true,
-			isNodeFile: false,
-			isNodeSubroutineAndFile: false,
-			data: this.generateSubroutineGraph(this.state.isColorNodesSame, 1)
+			nodeType: current,
+			data: this.generateSubroutineGraph(this.state.nodeColor, current)
 		});
 
 		this.restartSimulation()
@@ -128,52 +124,57 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 
 	nodesByFile() {
 		console.log("nodes by file")
+		let current : NodeType = {type:"NodesByFile"};
 		this.setState({
-			isNodeSubroutine: false,
-			isNodeFile: true,
-			isNodeSubroutineAndFile: false,
-			data: this.generateSubroutineGraph(this.state.isColorNodesSame, 2)
+			nodeType: current,
+			data: this.generateSubroutineGraph(this.state.nodeColor, current)
 		})
 		this.restartSimulation()
 	}
 
 	nodesByFileAndSubroutine() {
 		console.log("nodes by subroutine and file")
+		let current : NodeType = {type:"NodesBySubroutinesAndFile"};
 		this.setState({
-			isNodeSubroutine: false,
-			isNodeFile: false,
-			isNodeSubroutineAndFile: true,
-			data: this.generateSubroutineGraph(this.state.isColorNodesSame, 3)
+			nodeType: current,
+			data: this.generateSubroutineGraph(this.state.nodeColor, current)
 		})
 
 		this.restartSimulation()
 	}
 
-	generateSubroutineGraph(color_nodes_same: boolean, render_option: number) {
-		console.log(this.state.isNodeSubroutine, this.state.isNodeFile, this.state.isNodeSubroutineAndFile);
-		if (color_nodes_same === true) {
-			if (render_option === 1) {
+	generateSubroutineGraph(nodeColor: NodeColor, nodeType: NodeType | undefined) {
+		if (nodeType === undefined) {
+			nodeType = this.state.nodeType
+		}
+
+		console.log("nodeColor");
+		console.log(nodeColor.type);
+		console.log("render_option:")
+		console.log(nodeType.type);
+		if (nodeColor.type === "SameColor") {
+			if (nodeType.type === "NodesBySubroutines") {
 				console.log("same color subroutine only")
 				return no_color_graph(this.props.graph_json)
 			}
-			else if (render_option === 2) {
+			else if (nodeType.type=== "NodesByFile") {
 				console.log("same color file only")
 				return nodesByFileGraph(this.props.graph_json);
 			}
-			else if (render_option === 3) {
+			else if (nodeType.type === "NodesBySubroutinesAndFile") {
 				console.log("same color file and subroutine")
 				return nodesByFileAndSubroutineGraph(this.props.graph_json, false);
 			}
-		} else if (color_nodes_same === false) {
-			if (render_option === 1){ 
+		} else if (nodeColor.type === "ColorByFile") {
+			if (nodeType.type === "NodesBySubroutines"){ 
 				console.log("color files | subroutine only")
 				return color_nodes_by_parent_file(this.props.graph_json)
 			}
-			else if (render_option === 2) {
+			else if (nodeType.type === "NodesByFile") {
 				console.log("color files | file only")
 				return nodesByFileGraph(this.props.graph_json);
 			}
-			else if (render_option === 3) {
+			else if (nodeType.type === "NodesBySubroutinesAndFile") {
 				console.log("color files | file and subroutine")
 				return nodesByFileAndSubroutineGraph(this.props.graph_json, true);
 			}
@@ -185,23 +186,25 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 	
 	// colors stuff
 	colorNodesSameClass() {
-		return this.genericButtonGroupColoring(this.state.isColorNodesSame, !this.state.isNodeFile)
+		return this.genericButtonGroupColoring(this.state.nodeColor.type === "SameColor", this.state.nodeType.type !== "NodesByFile");
 	}
 	colorNodesFileClass() {
-		return this.genericButtonGroupColoring(this.state.isColorNodesFile, !this.state.isNodeFile)
+		console.log("called colorNodesFileClass");
+		let result = this.genericButtonGroupColoring(this.state.nodeColor.type ===  "ColorByFile", this.state.nodeType.type !== "NodesByFile") ;
+		console.log("result of colorNodesFileClass:" + result);
+		return result
 	}
 
 	// nodes stuff
 	nodesBySubroutineClass() {
-		return this.genericButtonGroupColoring(this.state.isNodeSubroutine, true);
+		return this.genericButtonGroupColoring(this.state.nodeType.type === "NodesBySubroutines" , true);
 	}
 	nodesByFileClass() {
-		return this.genericButtonGroupColoring(this.state.isNodeFile, true);
+		return this.genericButtonGroupColoring(this.state.nodeType.type === "NodesByFile", true);
 	}
 	nodesByFileAndSubroutineClass() {
-		return this.genericButtonGroupColoring(this.state.isNodeSubroutineAndFile, true);
+		return this.genericButtonGroupColoring(this.state.nodeType.type === "NodesBySubroutinesAndFile", true);
 	}
-
 
 	// is active determines if this button should be active (its clicked)
 	// allowed_active determines if these buttons are even allowed to be active (for example,
@@ -298,45 +301,45 @@ const onClickGraph = function(event: any) {
      //window.alert('Clicked the graph background');
 };
 
-const onClickNode = function(nodeId: any) {
+const onClickNode = function(_nodeId: any) {
      //window.alert('Clicked node ${nodeId}');
 };
 
-const onDoubleClickNode = function(nodeId: any) {
+const onDoubleClickNode = function(_nodeId: any) {
      //window.alert('Double clicked node ${nodeId}');
 };
 
-const onRightClickNode = function(event: React.MouseEvent<Element, MouseEvent>, nodeId: string) {
+const onRightClickNode = function(event: React.MouseEvent<Element, MouseEvent>, _nodeId: string) {
 	event.preventDefault();
      //window.alert('Right clicked node ${nodeId}');
 };
 
-const onMouseOverNode = function(nodeId: string) {
+const onMouseOverNode = function(_nodeId: string) {
      //window.alert(`Mouse over node ${nodeId}`);
 };
 
-const onMouseOutNode = function(nodeId: string) {
+const onMouseOutNode = function(_nodeId: string) {
      //window.alert(`Mouse out node ${nodeId}`);
 };
 
-const onClickLink = function(source: any, target: any) {
+const onClickLink = function(_source: any, _target: any) {
      //window.alert(`Clicked link between ${source} and ${target}`);
 };
 
-const onRightClickLink = function(event: any, source: any, target: any) {
+const onRightClickLink = function(event: any, _source: any, _target: any) {
 	event.preventDefault();
      //window.alert('Right clicked link between ${source} and ${target}');
 };
 
-const onMouseOverLink = function(source: any, target: any) {
+const onMouseOverLink = function(_source: any, _target: any) {
      //window.alert(`Mouse over in link between ${source} and ${target}`);
 };
 
-const onMouseOutLink = function(source: any, target: any) {
+const onMouseOutLink = function(_source: any, _target: any) {
      //window.alert(`Mouse out link between ${source} and ${target}`);
 };
 
-const onNodePositionChange = function(nodeId: string, x: number, y:number) {
+const onNodePositionChange = function(_nodeId: string, x: number, y:number) {
      //window.alert(`Node ${nodeId} moved to new position x= ${x} y= ${y}`);
 };
 
