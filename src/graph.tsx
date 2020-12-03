@@ -10,13 +10,13 @@ interface CustomGraphState {
 	config: any,
 	nodeColor: NodeColor,
 	nodeType: NodeType,
+	minimumDegree: number
 	key: number
 }
 
 interface CustomGraphProps{
 	graph_json: GraphJson;
 }
-
 
 interface GraphEdge {
 	source: string,
@@ -51,9 +51,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 	constructor(props: CustomGraphProps) {
 		super(props)
 
-		//const data = no_color_graph(props.graph_json);
 		const data = nodesByFileGraph(props.graph_json);
-
 		
 		// the graph configuration, you only need to pass down properties
 		// that you want to override, otherwise default ones will be used
@@ -64,6 +62,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 			nodeColor: {type: "SameColor"},
 			nodeType: {type:"NodesByFile"},
 			key: 1,
+			minimumDegree: 1
 		};
 	}
 
@@ -226,6 +225,13 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		this.setState({key: this.state.key + 1})
 	}
 
+	minDegreeUpdate(event: React.FormEvent<HTMLInputElement>) {
+		let num = Number(event.currentTarget.value)
+
+		this.setState({minimumDegree: num})
+		this.restartSimulation()
+	}
+
 	render() {
 		let graph = <Graph
 			key={this.state.key}
@@ -284,6 +290,13 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 							<button type="button" className={this.nodesByFileClass()} onClick={() => this.nodesByFile()} >Nodes by File</button>
 							<button type="button" className={this.nodesByFileAndSubroutineClass()} onClick={() => this.nodesByFileAndSubroutine()} >Include both subroutines and files</button>
 						</div>
+
+						<div className="row">
+							<h6 className="pl-3 mt-3">Minimum Degree</h6>
+						</div>
+
+						
+						<input type="text" className="form-control" placeholder="1" aria-label="Minimum node degree to be displayed on the graph" onChange={this.minDegreeUpdate.bind(this)} />
 
 						<button type="button" className="btn btn-primary mt-3" onClick={() => this.restartSimulation()}>Restart Simulation</button>
 

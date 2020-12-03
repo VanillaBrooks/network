@@ -6,6 +6,7 @@ export interface GraphJson {
 export interface Node {
 	parent_file_name: string,
 	self_subroutine_name: string,
+	body: string
 }
 
 export interface Edge {
