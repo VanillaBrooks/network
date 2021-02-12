@@ -10,15 +10,15 @@ class App extends React.Component<{}, AppState> {
 		this.state = {uploaded_json: undefined};
 	}
 
-	// When the user chooses json data this callback fires and we set the json that we 
+	// When the user chooses json data this callback fires and we set the json that we
 	// will pass to the graph
 	onUpload(uploadedAndParsedJson: GraphJson) {
 		console.log("json data has been uploaded");
 		this.setState({uploaded_json: uploadedAndParsedJson})
 	}
-	
+
 	render() {
-			if (this.state.uploaded_json === undefined) { 
+			if (this.state.uploaded_json === undefined) {
 
 				return <JsonUpload onUpload={this.onUpload.bind(this)}/>
 			} else {

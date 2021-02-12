@@ -52,12 +52,12 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		super(props)
 
 		const data = nodesByFileGraph(props.graph_json);
-		
+
 		// the graph configuration, you only need to pass down properties
 		// that you want to override, otherwise default ones will be used
 		const myConfig = make_config();
 		this.state = {
-			data: data, 
+			data: data,
 			config: myConfig,
 			nodeColor: {type: "SameColor"},
 			nodeType: {type:"NodesByFile"},
@@ -80,12 +80,12 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 			return false
 		}
 	}
-	
+
 	// redraw all the nodes with the same colors
 	colorNodesSame() {
 		console.log("nodes same")
 		if (this.dontAllowColorOptions()) {
-			return 
+			return
 		}
 
 		let same : NodeColor= {type: "SameColor"};
@@ -99,7 +99,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 	colorNodesFile() {
 		console.log("nodes file")
 		if (this.dontAllowColorOptions()) {
-			return 
+			return
 		}
 		let byFile : NodeColor= {type: "ColorByFile"};
 
@@ -165,7 +165,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 				return nodesByFileAndSubroutineGraph(this.props.graph_json, false);
 			}
 		} else if (nodeColor.type === "ColorByFile") {
-			if (nodeType.type === "NodesBySubroutines"){ 
+			if (nodeType.type === "NodesBySubroutines"){
 				console.log("color files | subroutine only")
 				return color_nodes_by_parent_file(this.props.graph_json)
 			}
@@ -182,7 +182,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 			window.alert("generateSubroutineGraph: Neither value true")
 		}
 	}
-	
+
 	// colors stuff
 	colorNodesSameClass() {
 		return this.genericButtonGroupColoring(this.state.nodeColor.type === "SameColor", this.state.nodeType.type !== "NodesByFile");
@@ -261,7 +261,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 					</div>
 					<div className="col-3 graph-settings shadow">
 						<h3 className="mt-2">Settings</h3>
-						
+
 						<hr/>
 
 						<div className="row">
@@ -295,7 +295,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 							<h6 className="pl-3 mt-3">Minimum Degree</h6>
 						</div>
 
-						
+
 						<input type="text" className="form-control" placeholder="1" aria-label="Minimum node degree to be displayed on the graph" onChange={this.minDegreeUpdate.bind(this)} />
 
 						<button type="button" className="btn btn-primary mt-3" onClick={() => this.restartSimulation()}>Restart Simulation</button>
@@ -426,11 +426,11 @@ const make_config = function() {
 function no_color_graph(json_data: GraphJson) {
 	// graph payload (with minimalist structure)
 	const nodes = json_data.nodes.map(x => {
-		return {id: x.self_subroutine_name}
+		return {id: x.self_subroutine_name, size: x.cycles}
 	})
 	const data = {
 		nodes: nodes,
-		links: generic_edges(json_data) 
+		links: generic_edges(json_data)
 	};
 	return data
 }
@@ -467,7 +467,8 @@ function color_nodes_by_parent_file(json_data: GraphJson) {
 
 		return {
 			id: node.self_subroutine_name,
-			color: color
+			color: color,
+			size: node.cycles
 		}
 	})
 
@@ -487,7 +488,7 @@ function nodesByFileGraph(json_data: GraphJson ) {
 		subroutine_to_file_map.set(node.self_subroutine_name, node.parent_file_name);
 
 		return {
-			id: node.parent_file_name
+			id: node.parent_file_name,
 		}
 	});
 
@@ -536,7 +537,7 @@ function nodesByFileGraph(json_data: GraphJson ) {
 	}
 }
 
-// use_colors determines if we should use the default node color from the config (false) or 
+// use_colors determines if we should use the default node color from the config (false) or
 // make all subroutines from the same file the same color (true)
 function nodesByFileAndSubroutineGraph(json_data: GraphJson, use_colors: boolean) {
 	// optionally stores colors that each file is associated with
