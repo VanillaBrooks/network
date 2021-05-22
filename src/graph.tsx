@@ -10,6 +10,7 @@ interface CustomGraphState {
 	config: any,
 	nodeColor: NodeColor,
 	nodeType: NodeType,
+	nodeSize: NodeSize
 	minimumDegree: number
 	key: number
 }
@@ -31,6 +32,16 @@ interface SameColor {
 
 interface ColorByFile {
 	type: "ColorByFile",
+}
+
+type NodeSize = SizeRuntime | SizeDefault;
+
+interface SizeRuntime {
+	type: "SizeRuntime"
+}
+
+interface SizeDefault {
+	type: "SizeDefault"
 }
 
 type NodeType = NodesBySubroutines | NodesByFile | NodesBySubroutinesAndFile;
@@ -61,6 +72,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 			config: myConfig,
 			nodeColor: {type: "SameColor"},
 			nodeType: {type:"NodesByFile"},
+			nodeSize: {type:"SizeDefault"},
 			key: 1,
 			minimumDegree: 1
 		};
@@ -81,6 +93,14 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		}
 	}
 
+	dontAllowSizeOptions() {
+		if (this.state.nodeType.type === "NodesBySubroutines") {
+			return false
+		} else {
+			return true
+		}
+	}
+
 	// redraw all the nodes with the same colors
 	colorNodesSame() {
 		console.log("nodes same")
@@ -91,7 +111,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		let same : NodeColor= {type: "SameColor"};
 		this.setState({
 			nodeColor: same,
-			data:this.generateSubroutineGraph(same, undefined)
+			data:this.generateSubroutineGraph(same, undefined, this.state.nodeSize)
 		})
 	}
 
@@ -105,7 +125,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 
 		this.setState({
 			nodeColor: byFile,
-			data:this.generateSubroutineGraph(byFile, undefined)
+			data:this.generateSubroutineGraph(byFile, undefined, this.state.nodeSize)
 		});
 	}
 
@@ -115,7 +135,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		let current : NodeType = {type:"NodesBySubroutines"};
 		this.setState({
 			nodeType: current,
-			data: this.generateSubroutineGraph(this.state.nodeColor, current)
+			data: this.generateSubroutineGraph(this.state.nodeColor, current, this.state.nodeSize)
 		});
 
 		this.restartSimulation()
@@ -126,7 +146,7 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		let current : NodeType = {type:"NodesByFile"};
 		this.setState({
 			nodeType: current,
-			data: this.generateSubroutineGraph(this.state.nodeColor, current)
+			data: this.generateSubroutineGraph(this.state.nodeColor, current, undefined)
 		})
 		this.restartSimulation()
 	}
@@ -136,15 +156,18 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		let current : NodeType = {type:"NodesBySubroutinesAndFile"};
 		this.setState({
 			nodeType: current,
-			data: this.generateSubroutineGraph(this.state.nodeColor, current)
+			data: this.generateSubroutineGraph(this.state.nodeColor, current, undefined)
 		})
 
 		this.restartSimulation()
 	}
 
-	generateSubroutineGraph(nodeColor: NodeColor, nodeType: NodeType | undefined) {
+	generateSubroutineGraph(nodeColor: NodeColor, nodeType: NodeType | undefined, nodeSize: NodeSize | undefined) {
 		if (nodeType === undefined) {
 			nodeType = this.state.nodeType
+		}
+		if (nodeSize === undefined) {
+			nodeSize = this.state.nodeSize
 		}
 
 		console.log("nodeColor");
@@ -153,8 +176,13 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		console.log(nodeType.type);
 		if (nodeColor.type === "SameColor") {
 			if (nodeType.type === "NodesBySubroutines") {
-				console.log("same color subroutine only")
-				return no_color_graph(this.props.graph_json)
+				// since we are rendering subroutines we also have to check if
+				// we should render performance information
+				if (nodeSize.type === "SizeRuntime") {
+					return no_color_graph(this.props.graph_json, false)
+				} else if (nodeSize.type === "SizeDefault") {
+					return no_color_graph(this.props.graph_json, true)
+				}
 			}
 			else if (nodeType.type=== "NodesByFile") {
 				console.log("same color file only")
@@ -166,8 +194,13 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 			}
 		} else if (nodeColor.type === "ColorByFile") {
 			if (nodeType.type === "NodesBySubroutines"){
-				console.log("color files | subroutine only")
-				return color_nodes_by_parent_file(this.props.graph_json)
+				// since we are rendering subroutines we also have to check if
+				// we should render performance information
+				if (nodeSize.type === "SizeRuntime") {
+					return color_nodes_by_parent_file(this.props.graph_json,false)
+				} else if (nodeSize.type === "SizeDefault") {
+					return color_nodes_by_parent_file(this.props.graph_json,true)
+				}
 			}
 			else if (nodeType.type === "NodesByFile") {
 				console.log("color files | file only")
@@ -188,10 +221,41 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 		return this.genericButtonGroupColoring(this.state.nodeColor.type === "SameColor", this.state.nodeType.type !== "NodesByFile");
 	}
 	colorNodesFileClass() {
-		console.log("called colorNodesFileClass");
 		let result = this.genericButtonGroupColoring(this.state.nodeColor.type ===  "ColorByFile", this.state.nodeType.type !== "NodesByFile") ;
-		console.log("result of colorNodesFileClass:" + result);
 		return result
+	}
+
+	// sizing of nodes stuff
+	sizeNodesRuntime() {
+		return this.genericButtonGroupColoring(this.state.nodeSize.type === "SizeRuntime", this.state.nodeType.type === "NodesBySubroutines");
+	}
+
+	sizeNodesDefault() {
+		return this.genericButtonGroupColoring(this.state.nodeSize.type === "SizeDefault", this.state.nodeType.type === "NodesBySubroutines" );
+	}
+
+	setNodeSizeRuntime() {
+		if (this.dontAllowSizeOptions()) {
+			return
+		}
+
+		let update : NodeSize = {type: "SizeRuntime"};
+		this.setState ({
+			nodeSize: update,
+			data: this.generateSubroutineGraph(this.state.nodeColor, undefined, update)
+		})
+	}
+
+	setNodeSizeDefault() {
+		if (this.dontAllowSizeOptions()) {
+			return
+		}
+
+		let update : NodeSize = {type: "SizeDefault"};
+		this.setState ({
+			nodeSize: update,
+			data: this.generateSubroutineGraph(this.state.nodeColor, undefined, update)
+		})
 	}
 
 	// nodes stuff
@@ -282,6 +346,23 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 						}
 
 						<div className="row">
+							<h5 className="pl-3 mt-3">Node Size</h5>
+						</div>
+
+						{
+							this.dontAllowColorOptions() ?
+								<div className="list-group">
+									<button type="button" className={this.sizeNodesDefault()} disabled onClick={() => this.setNodeSizeDefault()} >Default Size</button>
+									<button type="button" className={this.sizeNodesRuntime()} disabled onClick={()=> this.setNodeSizeRuntime()}>Size by Runtime</button>
+								</div>
+								:
+								<div className="list-group">
+									<button type="button" className={this.sizeNodesDefault()} onClick={() => this.setNodeSizeDefault()} >Default Size</button>
+									<button type="button" className={this.sizeNodesRuntime()} onClick={()=> this.setNodeSizeRuntime()}>Size by Runtime</button>
+								</div>
+						}
+
+						<div className="row">
 							<h5 className="pl-3 mt-3">Node Options</h5>
 						</div>
 
@@ -291,12 +372,6 @@ class CustomGraph extends React.Component<CustomGraphProps, CustomGraphState> {
 							<button type="button" className={this.nodesByFileAndSubroutineClass()} onClick={() => this.nodesByFileAndSubroutine()} >Include both subroutines and files</button>
 						</div>
 
-						<div className="row">
-							<h6 className="pl-3 mt-3">Minimum Degree</h6>
-						</div>
-
-
-						<input type="text" className="form-control" placeholder="1" aria-label="Minimum node degree to be displayed on the graph" onChange={this.minDegreeUpdate.bind(this)} />
 
 						<button type="button" className="btn btn-primary mt-3" onClick={() => this.restartSimulation()}>Restart Simulation</button>
 
@@ -378,14 +453,14 @@ const make_config = function() {
 	  "d3": {
 	    "alphaTarget": 0.01,
 	    "gravity": -2000,
-	    "linkLength": 400,
+	    "linkLength": 200,
 	    "linkStrength": .1,
 	    "disableLinkForce": false
 	  },
 	  "node": {
 	    "color": "#d3d3d3",
 	    "fontColor": "black",
-	    "fontSize": 20,
+	    "fontSize": 30,
 	    "fontWeight": "normal",
 	    "highlightColor": "red",
 	    "highlightFontSize": 30,
@@ -423,10 +498,20 @@ const make_config = function() {
 }
 
 // given some json generate a blank graph with each node using the default colors of the config
-function no_color_graph(json_data: GraphJson) {
+function no_color_graph(json_data: GraphJson, use_default_size: boolean) {
 	// graph payload (with minimalist structure)
 	const nodes = json_data.nodes.map(x => {
-		return {id: x.self_subroutine_name, size: x.cycles}
+		let size;
+
+		// either use a default size or use the number of cycles
+		if (use_default_size===true) {
+			size = 450;
+		} else {
+			console.log("writing size by cycles")
+			size = x.cycles;
+		}
+
+		return {id: x.self_subroutine_name, size: size}
 	})
 	const data = {
 		nodes: nodes,
@@ -449,7 +534,7 @@ function generic_edges(json_data: GraphJson) {
 
 
 // make the color of each node dependent on the file that it came from
-function color_nodes_by_parent_file(json_data: GraphJson) {
+function color_nodes_by_parent_file(json_data: GraphJson, use_default_size: boolean) {
 	let file_to_color = new Map();
 
 	console.log("nodes")
@@ -465,10 +550,19 @@ function color_nodes_by_parent_file(json_data: GraphJson) {
 			color = new_color
 		}
 
+		let size;
+		// either use a default size or use the number of cycles
+		if (use_default_size===true) {
+			size = 450;
+		} else {
+			console.log("writing size by cycles")
+			size = node.cycles;
+		}
+
 		return {
 			id: node.self_subroutine_name,
 			color: color,
-			size: node.cycles
+			size: size
 		}
 	})
 
